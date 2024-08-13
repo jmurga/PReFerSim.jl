@@ -1,8 +1,8 @@
 ################################
 ####### Define parameters ######
 ################################
-@with_kw struct recipe
-    epochs::Array{Int64,1} = [1000]
+@with_kw mutable struct recipe
+    epochs::Array{Int64,1} = [200000]
     N::Array{Int64,1} = [10000]
 
     θ::Float64=8
@@ -18,7 +18,7 @@
     s_mult::Array{Float64,1}=[1.0]
     prob::Array{Float64,1}=[0.0]
 
-    n_anc::Int64=1000
+    n_anc::Int64=N[1]
     burnin_period::Bool=false
     
     relax::Bool=false
@@ -30,7 +30,7 @@
     seed::Int64=rand(1:10^8)
 
     trajectories::Array{Int64,1} = Int64[]
-    trajectories_output::String = ""
+    trajectories_output::OrderedDict{Int64,Vector} = ifelse(isempty(trajectories),OrderedDict{Int64,Vector}(),OrderedDict{Int64,Vector}(trajectories .=> Vector{Float64}[[]]))
 
     @assert length(N)==length(epochs)  "N and epochs must be equal in length";
     @assert length(s)==length(prob)    "s and probs must be equal in length";

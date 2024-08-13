@@ -66,7 +66,13 @@ function simulate(param::recipe, sample_size::Int64)
     seed = rand(1:10^8)
     if !isempty(trajectories)
         @assert length(unique(trajectories .> 0)) == 1  "ID index must be greater than 0";
-        io = open(trajectories_output,"w+")
+        # global io = open(trajectories_output,"w+")
+
+        if isempty(trajectories_output)
+            trajectories_output = OrderedDict(trajectories .=> Vector{Float64}[[]])
+        end
+
+        global trajectories_output
     end
     
     # set seed before start
@@ -90,11 +96,10 @@ function simulate(param::recipe, sample_size::Int64)
         s_mult = s_mult;
     end
     
-    if Threads.nthreads() == 1
-        @printf "Demographic History (%i epochs)\n\n" events;
-        for e=1:events
-            @printf "Ne = %i\tgenerations = %i\tF = %lf\n" N[e] epochs[e] param.F[e];
-        end
+
+    @info "Demographic History ($(events) epochs)"
+    for e=1:events
+        @info "Ne = $(N[e]) generations = $(epochs[e]) F = $(param.F[e])"
     end
 
     if burnin_period
@@ -106,19 +111,17 @@ function simulate(param::recipe, sample_size::Int64)
     l = 0;
     f = 0;
     N_F_1=0;
-    @printf "\n"
+    # @printf "\n"
     @inbounds for e=1:events
         # Inbreeding Ne
 
         N_F = N[e] / (1.0 + F[e]); 
-        if Threads.nthreads() == 1
-            @printf "Currently in epoch = %i ; Mutations before epoch's beginning = %i\n"  e length(mutation_list);
-        end
+
+        @info "Currently in epoch = $(e) ; Segregating mutations before epoch's beginning = $(length(mutation_list))";
+
 
         if epoch_relaxation[e]
-            if Threads.nthreads() == 1
-                printf("Relaxation in Epoch %i\n", e);
-            end
+            @info "Relaxation in Epoch $(e)";
 
             relax_selection!(mutation_list, s_relaxation, s_relaxation_threshold, relaxation_type);
         end
@@ -143,34 +146,36 @@ function simulate(param::recipe, sample_size::Int64)
         end
     end
 
-    if @isdefined io
-        close(io)
-    end
+    # if @isdefined io
+    #     close(io)
+    # end
 
     out = fs(mutation_list,r,sample_size);
 
-    return(out,hcat(l,f))
+    @info "Total number of mutations = $(l+f)"
+
+
+    if isempty(trajectories_output)
+        return(out,hcat(l,f))
+    else
+        return(out,hcat(l,f),trajectories_output)
+    end
 end
 
-function simulate_batch(param::recipe,sample_size::Int64,replicas::Int64;pool::Bool=true)
-
-    mutation_list = LinkedList{mutation}();
-
-    n_params = [deepcopy(param) for i::Int64=1:replicas];
-    n_mutations_list = [deepcopy(mutation_list) for i::Int64=1:replicas];
-    n_sample_size = [sample_size for i::Int64=1:replicas]
 
 
-    mut = ThreadsX.map(simulate,n_params,n_sample_size);
+function simulate(param::Vector{PReFerSim.recipe},sample_size::Int64;pool::Bool=false)
+
+    @info "Running a total of $(length(param)) recipes in $(Threads.nthreads())"
+    sfs,fix = @suppress begin
+        unzip(ThreadsX.map(x -> PReFerSim.simulate(x,sample_size),param));
+    end
 
     if pool
-        s = sum(x->x[1][:,2],mut);
-        f = sum(x->x[2],mut);
-
-        s = hcat(round.(collect(1:(sample_size-1))/sample_size,digits=3),s);
-    else
-        s = map(x-> x[1],mut)
-        f = map(x-> x[2],mut)
+        sfs = sum(sfs);
+        sfs[:,1] .= round.(collect(1:(sample_size-1))/sample_size,digits=3)
+        fix = sum(fix)
     end
-    return s,f
+    return sfs,fix
 end
+

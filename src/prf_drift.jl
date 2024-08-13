@@ -55,8 +55,10 @@ function add_mutation!(mutation_list::LinkedList{mutation},r::Ptr{gsl_rng},N::Fl
         push!(mutation_list,mut);
         
         if(!isempty(trajectories) && count_mut in trajectories)
-            i::Int64 = findfirst(isequal(count_mut),trajectories);
-            @printf(io, "%d\t%lf\n", trajectories[i], (1.0/N));
+            # @show count_mut
+            # i::Int64 = findfirst(isequal(count_mut),trajectories);
+            # @printf(io, "%d\t%lf\n", trajectories[i], (1.0/N));
+            push!(trajectories_output[count_mut],(1.0/N))
         end
     end
 end
@@ -88,8 +90,10 @@ function drift_sel!(mutation_list::LinkedList{mutation},r::Ptr{gsl_rng},N::Float
 
             if (freq > 0.0 && freq < 1.0)   
                 if(!isempty(trajectories) && num in trajectories)
-                    i = findfirst(isequal(num),trajectories);
-                    @printf(io, "%d\t%lf\n", trajectories[i], freq);
+                    # @show num
+                    # i = findfirst(isequal(num),trajectories);
+                    # @printf(io, "%d\t%lf\n", trajectories[i], freq);
+                    push!(trajectories_output[num],freq)
                 end
                 # Move node
                 node = node.next
