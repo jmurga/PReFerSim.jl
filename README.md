@@ -2,13 +2,11 @@
 
 [![Build Status](https://github.com/jmurga/PReFerSim.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/jmurga/PReFerSim.jl/actions/workflows/CI.yml?query=branch%3Amain)
 
-This is a Julia port of PReFerSim [PReFerSim](https://doi.org/10.1093/bioinformatics/btw478) software. It simplify parameters input, modification and simulation replicas. PReFerSim performs forward simulations under the PRF model while allowing models changes in population size, arbitrary amounts of inbreeding, dominance, and distributions of selective effects.
+This is a Julia port of [PReFerSim](https://doi.org/10.1093/bioinformatics/btw478) software. It simplifies parameter input, modification and replicas. PReFerSim performs forward simulations under the PRF model while allowing model changes in population size, arbitrary amounts of inbreeding, dominance, and distributions of selective effects.
 
-If you use PReFerSim please cite: Ortega-Del Vecchyo, D., Marsden, C. D. & Lohmueller, K. E. PReFerSim: fast simulation of demography and selection under the Poisson Random Field model. Bioinformatics 32, 3516–3518 (2016).
+If you use PReFerSim.jl please cite: Ortega-Del Vecchyo, D., Marsden, C. D. & Lohmueller, K. E. PReFerSim: fast simulation of demography and selection under the Poisson Random Field model. Bioinformatics 32, 3516–3518 (2016).
 
-The package is follow same parameter inputs as the orginal PReFerSim implementation. Check the original  manual for a comprehensive overview of the input parameters.
-
-Now the parameteres are accesible by using `PreFerSim.recipe()` structure. The following example mimics ParameterFile1.txt
+The package follows the same parameter inputs as the original PReFerSim implementation. Check the original manual for a comprehensive overview of the input parameters. Parameters are accessible and modificable using the `PreFerSim.recipe()` structure. The following example mimics ParameterFile1.txt
 
 ```julia
 using PReFerSim
