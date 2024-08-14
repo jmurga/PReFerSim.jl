@@ -162,13 +162,11 @@ function simulate(param::recipe, sample_size::Int64)
     end
 end
 
-
-
-function simulate(param::Vector{PReFerSim.recipe},sample_size::Int64;pool::Bool=false)
+function simulate(param::Vector{recipe},sample_size::Int64;pool::Bool=false)
 
     @info "Running a total of $(length(param)) recipes in $(Threads.nthreads())"
     sfs,fix = @suppress begin
-        unzip(ThreadsX.map(x -> PReFerSim.simulate(x,sample_size),param));
+        unzip(ThreadsX.map(x -> simulate(x,sample_size),param));
     end
 
     if pool

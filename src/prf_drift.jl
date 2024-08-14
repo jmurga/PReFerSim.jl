@@ -63,6 +63,33 @@ function add_mutation!(mutation_list::LinkedList{mutation},r::Ptr{gsl_rng},N::Fl
     end
 end
 
+
+function add_mutation!(mutation_list::LinkedList{mutation},r::Ptr{gsl_rng},N::Float64,h::Float64,s::Float64,θ::Float64,freq::Float64,dfe::String,param_one::Float64,param_two::Float64,s_mult::Float64,n_anc::Int64,age::Int64,relax::Bool)
+
+    num_mut::Int64 = Int(ran_poisson(r,θ/2.0))
+    count_mut::Int64 = length(mutation_list)
+
+    local s_value::Float64 = 0.0
+    @inbounds for x::Int64=1:num_mut
+        if dfe == "point"
+            s_value = s;
+        elseif dfe == "gamma"
+            ##Use this for gamma distribution in Boyko 2008:
+            gamma = ran_gamma(r, param_one, param_two * s_mult);
+            # note, this is scale for a Nanc=1000, using the boyko params
+            s_value = - gamma / (n_anc * 2);
+        elseif dfe == "beta"
+            gamma = ran_beta(r, param_one, param_two * s_mult);
+            s_value = - gamma / (n_anc * 2);
+        end
+
+        count_mut += 1;
+        mut        = mutation(frequency = freq, h = h, s = s_value*2, count_samp = 0.0, age = age, num = count_mut, type=1)
+        push!(mutation_list,mut);
+
+    end
+end
+
 function drift_sel!(mutation_list::LinkedList{mutation},r::Ptr{gsl_rng},N::Float64,F::Float64,trajectories::Array{Int64,1})
 
     l = 0;
@@ -131,7 +158,7 @@ function burnin(param::recipe, r::Ptr{gsl_rng})
     @inbounds for j::Int64 = 2:n_size
         res, err = quadgk(x -> f_of_q_lambda(x, j, n_size, s_size, sel, θ * 2), 0.0, 1.0)
         age::Int64 = n_size * 10
-        add_mutation!(mutation_list_burnin, r, Float64(n_size), h, sel, res, j / n_size, dfe, param_one, param_two, s_mult[1], n_anc, age, trajectories, relax)
+        add_mutation!(mutation_list_burnin, r, Float64(n_size), h, sel, res, j / n_size, dfe, param_one, param_two, s_mult[1], n_anc, age, relax)
     end
 
     return mutation_list_burnin
