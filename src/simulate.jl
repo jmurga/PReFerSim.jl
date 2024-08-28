@@ -86,7 +86,7 @@ function simulate(param::recipe, sample_size::Int64)
     s = SVector{length(s)}(s)
     F = SVector{length(F)}(F)
 
-    events = length(epochs);
+    events::Int64 = length(epochs);
     
     if(length(s)==1)
         s      = s[1];
@@ -108,14 +108,14 @@ function simulate(param::recipe, sample_size::Int64)
         mutation_list = LinkedList{mutation}();
     end;
     
-    l = 0;
-    f = 0;
-    N_F_1=0;
+    l::Int64= 0;
+    f::Int64= 0;
+    N_F_1::Int64=0;
     # @printf "\n"
     @inbounds for e=1:events
         # Inbreeding Ne
 
-        N_F = N[e] / (1.0 + F[e]); 
+        N_F::Float64 = N[e] / (1.0 + F[e]);
 
         @info "Currently in epoch = $(e) ; Segregating mutations before epoch's beginning = $(length(mutation_list))";
 
@@ -126,7 +126,7 @@ function simulate(param::recipe, sample_size::Int64)
             relax_selection!(mutation_list, s_relaxation, s_relaxation_threshold, relaxation_type);
         end
 
-        @inbounds for g=1:epochs[e]
+        @inbounds for g::Int64=1:epochs[e]
             # Mutation age
             if e == 1 
                 age = g;
