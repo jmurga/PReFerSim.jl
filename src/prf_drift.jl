@@ -231,14 +231,20 @@ function burnin(param::recipe,dfe_dist::T,r::Ptr{gsl_rng}) where T <: Union{Vect
     sel::Float64 = s[1]
     N_freq = 1/n_size
 
-    theoretical_sfs = zeros(Float64,n_size, 2)
-    number_of_mutations::Int64 = 0
+    # theoretical_sfs = zeros(Float64,n_size, 2)
+    # number_of_mutations::Int64 = 0
 
     mutation_list = Vector{Mutation}()
 
+    segbuf = QuadGK.alloc_segbuf(Float64, Float64, Float64)
+
     @inbounds for j::Int64 = 2:n_size
-    
-        res, err = quadgk(x -> f_of_q_lambda(x, j, n_size, s_size, sel, θ), 0.0, 1.0)
+
+        #res, err = quadgk(x -> f_of_q_lambda(x, j, n_size, s_size, sel, θ), 0.0, 1.0)
+        
+        integrand = FOfQLambda(j, n_size, s_size, sel, θ)
+        res, _ = quadgk(integrand, 0.0, 1.0; segbuf=segbuf)
+
         age::Int64 = 0
 
         add_mutation!(mutation_list,n_size_f,h,Poisson(res),N_freq,dfe_dist,n_anc,age,nothing,r)
@@ -247,7 +253,54 @@ function burnin(param::recipe,dfe_dist::T,r::Ptr{gsl_rng}) where T <: Union{Vect
     return mutation_list
 end
 
-function f_of_q_lambda(x::Float64,j::Int64,N_burnin::Int64,sample_size::Int64,point_sel::Float64,theta::Float64)
+
+struct SFSIntegrand{T<:Float64}
+    j::Int
+    N_burnin::Int
+    sample_size::Int
+    point_sel::T
+    theta::T
+end
+
+
+@inline function f_of_q_lambda(
+    x::Float64, j::Int, N_burnin::Int, sample_size::Int,
+    point_sel::Float64, theta::Float64
+)
+    gamma = N_burnin * point_sel
+
+    if abs(gamma) > 1.0e-7
+        
+        #a = 2.0 * N_burnin * point_sel
+        # sfs_function_term_one =
+        #   (1 - exp(-a*(1-x))) / (1 - exp(-a))
+        # Use expm1 for numerical stability.
+        #sfs_function_term_one = (-expm1(-a * (1.0 - x))) / (-expm1(-a))
+        sfs_function_term_one::Float64 = (1-exp(-2*N_burnin*(-point_sel)*(1-x)))/(1-exp(-2*N_burnin*(-point_sel)));
+
+        sfs_function_term_two::Float64 = 2.0 / (x * (1.0 - x))
+
+        binomial_value::Float64 = ran_binomial_pdf(j, x, sample_size)
+        # binomial_value::Float64 = pdf(Binomial(sample_size, x), j)
+
+        f = (theta / 2.0) * sfs_function_term_one * sfs_function_term_two * binomial_value
+    else
+        # theta/2 * 2/x == theta/x
+        f = theta * ran_binomial_pdf(j, x, sample_size) / x
+        # f = (theta / 2.0) * (2.0 / x) * pdf(Binomial(sample_size, x), j)
+    end
+
+    return f
+end
+
+
+
+@inline function (g::SFSIntegrand)(x::Float64)
+    f_of_q_lambda(x, g.j, g.N_burnin, g.sample_size, g.point_sel, g.theta)
+end
+
+
+#=function f_of_q_lambda(x::Float64,j::Int64,N_burnin::Int64,sample_size::Int64,point_sel::Float64,theta::Float64)
 
     gamma = N_burnin * point_sel;
 
@@ -256,14 +309,14 @@ function f_of_q_lambda(x::Float64,j::Int64,N_burnin::Int64,sample_size::Int64,po
         sfs_function_term_one = (1-exp(-2*N_burnin*(-point_sel)*(1-x)))/(1-exp(-2*N_burnin*(-point_sel)));
         sfs_function_term_two::Float64 = (2/(x*(1-x)));
 
-        # binomial_value::Float64 = ran_binomial_pdf(j,x,sample_size);
+        #binomial_value::Float64 = ran_binomial_pdf(j,x,sample_size);
         binomial_value::Float64 = pdf(Binomial(sample_size,x), j);
 
         f = theta/2 * sfs_function_term_one * sfs_function_term_two * binomial_value;
 
     else
-        # f = theta/2 * 2/x * ran_binomial_pdf(j,x,sample_size);
+        #f = theta/2 * 2/x * ran_binomial_pdf(j,x,sample_size);
         f = theta/2 * 2/x * pdf(Binomial(sample_size,x), j);
     end
     return  f;
-end
+end=#
