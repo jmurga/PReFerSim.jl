@@ -2,8 +2,9 @@
 ####### Define parameters ######
 ################################
 @with_kw mutable struct recipe
-    epochs::Array{Int64,1} = [200000]
-    N::Array{Int64,1} = [10000]
+
+    epochs::Vector{Int64} = [200000]
+    N::Vector{Int64} = [10000]
 
     θ::Float64=8
     h::Float64=0.5
@@ -14,10 +15,12 @@
     dfe::String="point"
     param_one::Float64=1.0
     param_two::Float64=1.0
-    s::Array{Float64,1}=-[0.0]
-    s_mult::Array{Float64,1}=[1.0]
-    prob::Array{Float64,1}=[0.0]
 
+    s::Vector{Float64}=-[0.0]
+    s_mult::Vector{Float64}=[1.0]
+    prob::Vector{Float64}=[0.0]
+
+    # n_anc = param_three, used as oldest N
     n_anc::Int64=N[1]
     burnin_period::Bool=false
     
@@ -26,11 +29,12 @@
     s_relaxation::Float64=0.0
     s_relaxation_threshold::Float64=0.0
 
-    F::Array{Float64,1}=zeros(length(N))
-    seed::Int64=rand(1:10^8)
+    F::Vector{Float64}=zeros(length(N))
 
-    trajectories::Array{Int64,1} = Int64[]
-    trajectories_output::OrderedDict{Int64,Vector} = ifelse(isempty(trajectories),OrderedDict{Int64,Vector}(),OrderedDict{Int64,Vector}(trajectories .=> Vector{Float64}[[]]))
+    trajectories::Vector{Int64} = Int64[]
+
+    seed::Int64 = rand(1:10^8)
+    #trajectories_output::OrderedDict{Int64,Vector} = ifelse(isempty(trajectories),OrderedDict{Int64,Vector}(),OrderedDict{Int64,Vector}(trajectories .=> Vector{Float64}[[]]))
 
     @assert length(N)==length(epochs)  "N and epochs must be equal in length";
     @assert length(s)==length(prob)    "s and probs must be equal in length";
@@ -43,19 +47,17 @@ end
     count_mut::Int64=0;
 end
 
-@with_kw mutable struct mutation
-    # The frequency of the mutation
-    frequency::Float64=0;
-    # Count of the mutation
-    count_samp::Int64=1; 
-    # Selection coefficient
-    s::Float64=0.0; 
-    # Dominance factor
-    h::Float64=0.5; 
-    # The generation that mutation has arise
-    age::Int64=1;
-    # Number of mutation. Tag to avoid similar nodes
-    num::Int64=1;
-    # Mutation type. 1=neutral; 2=deleterious; 3=strong advantegeous; 4=weakly advantegeous
-    type::Int8=0
+struct Mutation
+    frequency::Float64
+    h::Float32
+    s::Float64
+    count_samp::UInt32
+    age::UInt32
+    num::UInt32
+    type::UInt8
+end
+
+mutable struct Trajectories
+    next_mut_id::Int32
+    trajectories_output::Dict{Int32, Vector{Float64}}
 end

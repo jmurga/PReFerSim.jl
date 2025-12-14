@@ -1,7 +1,8 @@
 module PReFerSim
 
-using GSL, LinkedLists, Parameters, StaticArrays, Printf, QuadGK, ProgressMeter, ThreadsX, Unzip
+using GSL, Parameters, QuadGK, ThreadsX
 
+import Distributions: Gamma, Beta, Poisson, Binomial, LogNormal, pdf, mean
 import OrderedCollections: OrderedDict
 import Suppressor:@suppress
 import Unzip:unzip
