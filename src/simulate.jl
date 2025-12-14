@@ -78,7 +78,7 @@ function simulate(param::recipe, sample_size::Int64;verbose=true)
         logwarn(V, "Burnin period will assume neutrality (dfe == point; s = 0)")
     end
 
-    mutation_list = burnin_period ? burnin(param, [0], r) : Vector{Mutation}()
+    mutation_list = burnin_period ? burnin(param, [0.0], r) : Vector{Mutation}()
 
     l::Int64 = 0
     f::Int64 = 0

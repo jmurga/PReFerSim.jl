@@ -221,27 +221,30 @@ function drift_sel!(
 end
 
 
-function burnin(param::recipe,dfe_dist::T) where T <: Union{Vector{Float64}, Gamma{Float64}, Beta{Float64}}
+function burnin(param::recipe,dfe_dist::T,r::Ptr{gsl_rng}) where T <: Union{Vector{Float64}, Gamma{Float64}, Beta{Float64}}
 
     @unpack N, θ, s, h, dfe, param_one, param_two, s_mult, n_anc, trajectories, relax = param
 
     n_size::Int64 = N[1] - 1
+    n_size_f::Float64 = n_size
     s_size::Int64 = N[1] - 1
     sel::Float64 = s[1]
+    N_freq = 1/n_size
 
-    theoretical_sfs = zeros(Float64, n_size, 2)
+    theoretical_sfs = zeros(Float64,n_size, 2)
     number_of_mutations::Int64 = 0
 
-    mutation_list_burnin = LinkedList{mutation}()
+    mutation_list = Vector{Mutation}()
 
     @inbounds for j::Int64 = 2:n_size
+    
         res, err = quadgk(x -> f_of_q_lambda(x, j, n_size, s_size, sel, θ), 0.0, 1.0)
-        age::Int64 = -1
-        # add_mutation!(mutation_list_burnin, Float64(n_size), h, Poisson(res), j / n_size, dfe_dist, n_anc, age, relax)
-        add_mutation!(mutation_list,N_F,h,θ_dist,N_freq,dfe_dist,n_anc,age,nothing,r)
+        age::Int64 = 0
+
+        add_mutation!(mutation_list,n_size_f,h,Poisson(res),N_freq,dfe_dist,n_anc,age,nothing,r)
     end
 
-    return mutation_list_burnin
+    return mutation_list
 end
 
 function f_of_q_lambda(x::Float64,j::Int64,N_burnin::Int64,sample_size::Int64,point_sel::Float64,theta::Float64)
