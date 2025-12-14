@@ -61,3 +61,4 @@ mutable struct Trajectories
     next_mut_id::Int32
     trajectories_output::Dict{Int32, Vector{Float64}}
 end
+

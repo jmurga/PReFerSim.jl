@@ -168,4 +168,3 @@ function simulate(param::Vector{recipe},sample_size::Int64;pool::Bool=false)
 
     return sfs,fix
 end
-

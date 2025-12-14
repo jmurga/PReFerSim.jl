@@ -10,4 +10,7 @@ include("parameters.jl")
 include("prf_drift.jl")
 include("simulate.jl")
 
+
+export recipe,simulate
+
 end
