@@ -158,9 +158,7 @@ function simulate(param::Vector{recipe},sample_size::Int64;pool::Bool=false)
 
     @info "Running a total of $(length(param)) recipes in $(Threads.nthreads()) threads"
     
-    sfs,fix = @suppress begin
-        unzip(ThreadsX.map(x -> simulate(x,sample_size,verbose=false),param));
-    end
+    sfs,fix = unzip(ThreadsX.map(x -> simulate(x,sample_size,verbose=false),param));
 
     if pool
         sfs = sum(sfs);
